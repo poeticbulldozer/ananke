@@ -275,7 +275,7 @@ async fn do_cube_search(
                     "systemId64": id64.to_string(), "bodyId": body_id,
                     "uniqueId": format!("{}-{}", id64, body_id),
                     "system": sys_name,
-                    "body": if body_short.is_empty() { body_name.clone() } else { body_short },
+                    "body": if body_short.is_empty() { "A".to_string() } else { body_short },
                     "fullBodyName": body_name,
                     "type": sub_type,
                     "systemDistLy": (dist_ly * 100.0).round() / 100.0,
