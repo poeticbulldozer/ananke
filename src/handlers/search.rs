@@ -37,6 +37,7 @@ async fn do_cube_search(
         let eff = effective_filter.as_str();
 
         let mut target_subtypes: Vec<&str> = Vec::new();
+        let mut sys_reqs: Vec<String> = Vec::new();
         let mut is_terraformable = false;
         let mut ring_type_filter: Option<String> = None;
         let mut require_bio = false;
@@ -49,110 +50,110 @@ async fn do_cube_search(
         let mut star_class_subtypes: Vec<&str> = Vec::new();
 
         // -- Terrestrial planets --
-        if eff.contains("earth-like") { target_subtypes.push("Earth-like world"); }
-        if eff.contains("water world") { target_subtypes.push("Water world"); }
-        if eff.contains("ammonia world") { target_subtypes.push("Ammonia world"); }
-        if eff.contains("high metal content") { target_subtypes.push("High metal content world"); }
-        if eff.contains("metal-rich body") { target_subtypes.push("Metal-rich body"); }
-        if eff.contains("rocky body") { target_subtypes.push("Rocky body"); }
-        if eff.contains("rocky ice world") { target_subtypes.push("Rocky Ice world"); }
-        if eff.contains("icy body") { target_subtypes.push("Icy body"); }
+        if eff.contains("earth-like") { target_subtypes.push("Earth-like world"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Earth-like world')".to_string()); }
+        if eff.contains("water world") { target_subtypes.push("Water world"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Water world')".to_string()); }
+        if eff.contains("ammonia world") { target_subtypes.push("Ammonia world"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Ammonia world')".to_string()); }
+        if eff.contains("high metal content") { target_subtypes.push("High metal content world"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'High metal content world')".to_string()); }
+        if eff.contains("metal-rich body") { target_subtypes.push("Metal-rich body"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Metal-rich body')".to_string()); }
+        if eff.contains("rocky body") { target_subtypes.push("Rocky body"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Rocky body')".to_string()); }
+        if eff.contains("rocky ice world") { target_subtypes.push("Rocky Ice world"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Rocky Ice world')".to_string()); }
+        if eff.contains("icy body") { target_subtypes.push("Icy body"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Icy body')".to_string()); }
 
         // -- Gas giants --
-        if eff.contains("class i gas giant") { target_subtypes.push("Class I gas giant"); }
-        if eff.contains("class ii gas giant") { target_subtypes.push("Class II gas giant"); }
-        if eff.contains("class iii gas giant") { target_subtypes.push("Class III gas giant"); }
-        if eff.contains("class iv gas giant") { target_subtypes.push("Class IV gas giant"); }
-        if eff.contains("class v gas giant") { target_subtypes.push("Class V gas giant"); }
-        if eff.contains("water-based life giant") { target_subtypes.push("Gas giant with water-based life"); }
-        if eff.contains("ammonia-based life giant") { target_subtypes.push("Gas giant with ammonia-based life"); }
-        if eff.contains("helium-rich gas giant") { target_subtypes.push("Helium-rich gas giant"); }
-        else if eff.contains("helium gas giant") { target_subtypes.push("Helium gas giant"); }
-        if eff.contains("water giant") { target_subtypes.push("Water giant"); }
+        if eff.contains("class i gas giant") { target_subtypes.push("Class I gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Class I gas giant')".to_string()); }
+        if eff.contains("class ii gas giant") { target_subtypes.push("Class II gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Class II gas giant')".to_string()); }
+        if eff.contains("class iii gas giant") { target_subtypes.push("Class III gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Class III gas giant')".to_string()); }
+        if eff.contains("class iv gas giant") { target_subtypes.push("Class IV gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Class IV gas giant')".to_string()); }
+        if eff.contains("class v gas giant") { target_subtypes.push("Class V gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Class V gas giant')".to_string()); }
+        if eff.contains("water-based life giant") { target_subtypes.push("Gas giant with water-based life"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Gas giant with water-based life')".to_string()); }
+        if eff.contains("ammonia-based life giant") { target_subtypes.push("Gas giant with ammonia-based life"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Gas giant with ammonia-based life')".to_string()); }
+        if eff.contains("helium-rich gas giant") { target_subtypes.push("Helium-rich gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Helium-rich gas giant')".to_string()); }
+        else if eff.contains("helium gas giant") { target_subtypes.push("Helium gas giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Helium gas giant')".to_string()); }
+        if eff.contains("water giant") { target_subtypes.push("Water giant"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Water giant')".to_string()); }
 
         // -- Compact / exotic objects --
-        if eff.contains("neutron star") { target_subtypes.push("Neutron Star"); }
-        if eff.contains("supermassive black hole") { target_subtypes.push("Supermassive Black Hole"); }
-        else if eff.contains("black hole") { target_subtypes.push("Black Hole"); }
+        if eff.contains("neutron star") { target_subtypes.push("Neutron Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Neutron Star')".to_string()); }
+        if eff.contains("supermassive black hole") { target_subtypes.push("Supermassive Black Hole"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Supermassive Black Hole')".to_string()); }
+        else if eff.contains("black hole") { target_subtypes.push("Black Hole"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Black Hole')".to_string()); }
 
         // White dwarfs — specific subtypes first, then catch-all
-        if eff.contains("white dwarf dab") { white_dwarf_specific.push("White Dwarf (DAB) Star"); }
-        if eff.contains("white dwarf dav") { white_dwarf_specific.push("White Dwarf (DAV) Star"); }
-        if eff.contains("white dwarf daz") { white_dwarf_specific.push("White Dwarf (DAZ) Star"); }
+        if eff.contains("white dwarf dab") { white_dwarf_specific.push("White Dwarf (DAB) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DAB) Star')".to_string()); }
+        if eff.contains("white dwarf dav") { white_dwarf_specific.push("White Dwarf (DAV) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DAV) Star')".to_string()); }
+        if eff.contains("white dwarf daz") { white_dwarf_specific.push("White Dwarf (DAZ) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DAZ) Star')".to_string()); }
         if eff.contains("white dwarf da") && !eff.contains("white dwarf dab") && !eff.contains("white dwarf dav") && !eff.contains("white dwarf daz") {
             white_dwarf_specific.push("White Dwarf (DA) Star");
-        }
-        if eff.contains("white dwarf dbv") { white_dwarf_specific.push("White Dwarf (DBV) Star"); }
-        if eff.contains("white dwarf dbz") { white_dwarf_specific.push("White Dwarf (DBZ) Star"); }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DA) Star')".to_string()); }
+        if eff.contains("white dwarf dbv") { white_dwarf_specific.push("White Dwarf (DBV) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DBV) Star')".to_string()); }
+        if eff.contains("white dwarf dbz") { white_dwarf_specific.push("White Dwarf (DBZ) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DBZ) Star')".to_string()); }
         if eff.contains("white dwarf db") && !eff.contains("white dwarf dbv") && !eff.contains("white dwarf dbz") {
             white_dwarf_specific.push("White Dwarf (DB) Star");
-        }
-        if eff.contains("white dwarf dcv") { white_dwarf_specific.push("White Dwarf (DCV) Star"); }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DB) Star')".to_string()); }
+        if eff.contains("white dwarf dcv") { white_dwarf_specific.push("White Dwarf (DCV) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DCV) Star')".to_string()); }
         if eff.contains("white dwarf dc") && !eff.contains("white dwarf dcv") {
             white_dwarf_specific.push("White Dwarf (DC) Star");
-        }
-        if eff.contains("white dwarf dq") { white_dwarf_specific.push("White Dwarf (DQ) Star"); }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DC) Star')".to_string()); }
+        if eff.contains("white dwarf dq") { white_dwarf_specific.push("White Dwarf (DQ) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (DQ) Star')".to_string()); }
         // "white dwarf d" (generic D, not DA/DB/DC/DQ)
         if eff.contains("white dwarf d") && !eff.contains("white dwarf da") && !eff.contains("white dwarf db") && !eff.contains("white dwarf dc") && !eff.contains("white dwarf dq") {
             white_dwarf_specific.push("White Dwarf (D) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'White Dwarf (D) Star')".to_string()); }
         // Catch-all: "white dwarf" without any specific subtype selects all
         if eff.contains("white dwarf") && white_dwarf_specific.is_empty() {
-            include_white_dwarfs = true;
+            include_white_dwarfs = true; sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType LIKE 'White Dwarf%')".to_string());
         }
 
         // Wolf-Rayet stars — specific variants first
         if eff.contains("wolf-rayet c") && !eff.contains("wolf-rayet nc") {
             wolf_rayet_specific.push("Wolf-Rayet C Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Wolf-Rayet C Star')".to_string()); }
         if eff.contains("wolf-rayet n") && !eff.contains("wolf-rayet nc") {
             wolf_rayet_specific.push("Wolf-Rayet N Star");
-        }
-        if eff.contains("wolf-rayet nc") { wolf_rayet_specific.push("Wolf-Rayet NC Star"); }
-        if eff.contains("wolf-rayet o") { wolf_rayet_specific.push("Wolf-Rayet O Star"); }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Wolf-Rayet N Star')".to_string()); }
+        if eff.contains("wolf-rayet nc") { wolf_rayet_specific.push("Wolf-Rayet NC Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Wolf-Rayet NC Star')".to_string()); }
+        if eff.contains("wolf-rayet o") { wolf_rayet_specific.push("Wolf-Rayet O Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Wolf-Rayet O Star')".to_string()); }
         if eff.contains("wolf-rayet") && wolf_rayet_specific.is_empty() {
-            include_wolf_rayet = true;
+            include_wolf_rayet = true; sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType LIKE 'Wolf-Rayet%')".to_string());
         }
 
         // -- Main-sequence star classes --
         if eff.contains("o star") {
             star_class_subtypes.push("O (Blue-White) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'O (Blue-White) Star')".to_string()); }
         if eff.contains("b star") {
             star_class_subtypes.push("B (Blue-White) Star");
             star_class_subtypes.push("B (Blue-White super giant) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType IN ('B (Blue-White) Star', 'B (Blue-White super giant) Star'))".to_string()); }
         if eff.contains("a star") {
             star_class_subtypes.push("A (Blue-White) Star");
             star_class_subtypes.push("A (Blue-White super giant) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType IN ('A (Blue-White) Star', 'A (Blue-White super giant) Star'))".to_string()); }
         if eff.contains("f star") {
             star_class_subtypes.push("F (White) Star");
             star_class_subtypes.push("F (White super giant) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType IN ('F (White) Star', 'F (White super giant) Star'))".to_string()); }
         if eff.contains("g star") {
             star_class_subtypes.push("G (White-Yellow) Star");
             star_class_subtypes.push("G (White-Yellow super giant) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType IN ('G (White-Yellow) Star', 'G (White-Yellow super giant) Star'))".to_string()); }
         if eff.contains("k star") {
             star_class_subtypes.push("K (Yellow-Orange) Star");
             star_class_subtypes.push("K (Yellow-Orange giant) Star");
-        }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType IN ('K (Yellow-Orange) Star', 'K (Yellow-Orange giant) Star'))".to_string()); }
         if eff.contains("m star") {
             star_class_subtypes.push("M (Red dwarf) Star");
             star_class_subtypes.push("M (Red giant) Star");
             star_class_subtypes.push("M (Red super giant) Star");
-        }
-        if eff.contains("l dwarf") { star_class_subtypes.push("L (Brown dwarf) Star"); }
-        if eff.contains("t dwarf") { star_class_subtypes.push("T (Brown dwarf) Star"); }
-        if eff.contains("y dwarf") { star_class_subtypes.push("Y (Brown dwarf) Star"); }
-        if eff.contains("t tauri") { star_class_subtypes.push("T Tauri Star"); }
-        if eff.contains("herbig") { star_class_subtypes.push("Herbig Ae/Be Star"); }
-        if eff.contains("c star type") { star_class_subtypes.push("C Star"); }
-        if eff.contains("cj star type") { star_class_subtypes.push("CJ Star"); }
-        if eff.contains("cn star type") { star_class_subtypes.push("CN Star"); }
-        if eff.contains("ms star type") { star_class_subtypes.push("MS-type Star"); }
-        if eff.contains("s star type") { star_class_subtypes.push("S-type Star"); }
+        sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType IN ('M (Red dwarf) Star', 'M (Red giant) Star', 'M (Red super giant) Star'))".to_string()); }
+        if eff.contains("l dwarf") { star_class_subtypes.push("L (Brown dwarf) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'L (Brown dwarf) Star')".to_string()); }
+        if eff.contains("t dwarf") { star_class_subtypes.push("T (Brown dwarf) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'T (Brown dwarf) Star')".to_string()); }
+        if eff.contains("y dwarf") { star_class_subtypes.push("Y (Brown dwarf) Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Y (Brown dwarf) Star')".to_string()); }
+        if eff.contains("t tauri") { star_class_subtypes.push("T Tauri Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'T Tauri Star')".to_string()); }
+        if eff.contains("herbig") { star_class_subtypes.push("Herbig Ae/Be Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'Herbig Ae/Be Star')".to_string()); }
+        if eff.contains("c star type") { star_class_subtypes.push("C Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'C Star')".to_string()); }
+        if eff.contains("cj star type") { star_class_subtypes.push("CJ Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'CJ Star')".to_string()); }
+        if eff.contains("cn star type") { star_class_subtypes.push("CN Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'CN Star')".to_string()); }
+        if eff.contains("ms star type") { star_class_subtypes.push("MS-type Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'MS-type Star')".to_string()); }
+        if eff.contains("s star type") { star_class_subtypes.push("S-type Star"); sys_reqs.push("EXISTS (SELECT 1 FROM bodies b2 WHERE b2.systemId64 = s.id64 AND b2.subType = 'S-type Star')".to_string()); }
 
         // -- Properties --
         if eff.contains("terraformable") { is_terraformable = true; }
@@ -184,6 +185,10 @@ async fn do_cube_search(
                 FROM systems_index i JOIN systems s ON i.id = s.id64
                 JOIN bodies b ON s.id64 = b.systemId64
                 WHERE i.minX >= ? AND i.maxX <= ? AND i.minY >= ? AND i.maxY <= ? AND i.minZ >= ? AND i.maxZ <= ?");
+            for req in &sys_reqs {
+                sql.push_str(" AND ");
+                sql.push_str(req);
+            }
 
             let mut ring_param: Option<String> = None;
 
