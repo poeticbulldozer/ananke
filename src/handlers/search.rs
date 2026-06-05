@@ -41,28 +41,143 @@ async fn do_cube_search(
         let mut ring_type_filter: Option<String> = None;
         let mut require_bio = false;
         let mut require_geo = false;
+        let mut require_landable = false;
         let mut include_white_dwarfs = false;
+        let mut include_wolf_rayet = false;
+        let mut white_dwarf_specific: Vec<&str> = Vec::new();
+        let mut wolf_rayet_specific: Vec<&str> = Vec::new();
+        let mut star_class_subtypes: Vec<&str> = Vec::new();
 
+        // -- Terrestrial planets --
         if eff.contains("earth-like") { target_subtypes.push("Earth-like world"); }
         if eff.contains("water world") { target_subtypes.push("Water world"); }
         if eff.contains("ammonia world") { target_subtypes.push("Ammonia world"); }
-        if eff.contains("neutron star") { target_subtypes.push("Neutron Star"); }
-        if eff.contains("black hole") { target_subtypes.push("Black Hole"); }
-        if custom_filter.to_lowercase().contains("white dwarf") { include_white_dwarfs = true; }
-        if eff.contains("rocky body") { target_subtypes.push("Rocky body"); }
         if eff.contains("high metal content") { target_subtypes.push("High metal content world"); }
+        if eff.contains("metal-rich body") { target_subtypes.push("Metal-rich body"); }
+        if eff.contains("rocky body") { target_subtypes.push("Rocky body"); }
+        if eff.contains("rocky ice world") { target_subtypes.push("Rocky Ice world"); }
+        if eff.contains("icy body") { target_subtypes.push("Icy body"); }
+
+        // -- Gas giants --
+        if eff.contains("class i gas giant") { target_subtypes.push("Class I gas giant"); }
+        if eff.contains("class ii gas giant") { target_subtypes.push("Class II gas giant"); }
+        if eff.contains("class iii gas giant") { target_subtypes.push("Class III gas giant"); }
+        if eff.contains("class iv gas giant") { target_subtypes.push("Class IV gas giant"); }
+        if eff.contains("class v gas giant") { target_subtypes.push("Class V gas giant"); }
+        if eff.contains("water-based life giant") { target_subtypes.push("Gas giant with water-based life"); }
+        if eff.contains("ammonia-based life giant") { target_subtypes.push("Gas giant with ammonia-based life"); }
+        if eff.contains("helium-rich gas giant") { target_subtypes.push("Helium-rich gas giant"); }
+        else if eff.contains("helium gas giant") { target_subtypes.push("Helium gas giant"); }
+        if eff.contains("water giant") { target_subtypes.push("Water giant"); }
+
+        // -- Compact / exotic objects --
+        if eff.contains("neutron star") { target_subtypes.push("Neutron Star"); }
+        if eff.contains("supermassive black hole") { target_subtypes.push("Supermassive Black Hole"); }
+        else if eff.contains("black hole") { target_subtypes.push("Black Hole"); }
+
+        // White dwarfs — specific subtypes first, then catch-all
+        if eff.contains("white dwarf dab") { white_dwarf_specific.push("White Dwarf (DAB) Star"); }
+        if eff.contains("white dwarf dav") { white_dwarf_specific.push("White Dwarf (DAV) Star"); }
+        if eff.contains("white dwarf daz") { white_dwarf_specific.push("White Dwarf (DAZ) Star"); }
+        if eff.contains("white dwarf da") && !eff.contains("white dwarf dab") && !eff.contains("white dwarf dav") && !eff.contains("white dwarf daz") {
+            white_dwarf_specific.push("White Dwarf (DA) Star");
+        }
+        if eff.contains("white dwarf dbv") { white_dwarf_specific.push("White Dwarf (DBV) Star"); }
+        if eff.contains("white dwarf dbz") { white_dwarf_specific.push("White Dwarf (DBZ) Star"); }
+        if eff.contains("white dwarf db") && !eff.contains("white dwarf dbv") && !eff.contains("white dwarf dbz") {
+            white_dwarf_specific.push("White Dwarf (DB) Star");
+        }
+        if eff.contains("white dwarf dcv") { white_dwarf_specific.push("White Dwarf (DCV) Star"); }
+        if eff.contains("white dwarf dc") && !eff.contains("white dwarf dcv") {
+            white_dwarf_specific.push("White Dwarf (DC) Star");
+        }
+        if eff.contains("white dwarf dq") { white_dwarf_specific.push("White Dwarf (DQ) Star"); }
+        // "white dwarf d" (generic D, not DA/DB/DC/DQ)
+        if eff.contains("white dwarf d") && !eff.contains("white dwarf da") && !eff.contains("white dwarf db") && !eff.contains("white dwarf dc") && !eff.contains("white dwarf dq") {
+            white_dwarf_specific.push("White Dwarf (D) Star");
+        }
+        // Catch-all: "white dwarf" without any specific subtype selects all
+        if eff.contains("white dwarf") && white_dwarf_specific.is_empty() {
+            include_white_dwarfs = true;
+        }
+
+        // Wolf-Rayet stars — specific variants first
+        if eff.contains("wolf-rayet c") && !eff.contains("wolf-rayet nc") {
+            wolf_rayet_specific.push("Wolf-Rayet C Star");
+        }
+        if eff.contains("wolf-rayet n") && !eff.contains("wolf-rayet nc") {
+            wolf_rayet_specific.push("Wolf-Rayet N Star");
+        }
+        if eff.contains("wolf-rayet nc") { wolf_rayet_specific.push("Wolf-Rayet NC Star"); }
+        if eff.contains("wolf-rayet o") { wolf_rayet_specific.push("Wolf-Rayet O Star"); }
+        if eff.contains("wolf-rayet") && wolf_rayet_specific.is_empty() {
+            include_wolf_rayet = true;
+        }
+
+        // -- Main-sequence star classes --
+        if eff.contains("o star") {
+            star_class_subtypes.push("O (Blue-White) Star");
+        }
+        if eff.contains("b star") {
+            star_class_subtypes.push("B (Blue-White) Star");
+            star_class_subtypes.push("B (Blue-White super giant) Star");
+        }
+        if eff.contains("a star") {
+            star_class_subtypes.push("A (Blue-White) Star");
+            star_class_subtypes.push("A (Blue-White super giant) Star");
+        }
+        if eff.contains("f star") {
+            star_class_subtypes.push("F (White) Star");
+            star_class_subtypes.push("F (White super giant) Star");
+        }
+        if eff.contains("g star") {
+            star_class_subtypes.push("G (White-Yellow) Star");
+            star_class_subtypes.push("G (White-Yellow super giant) Star");
+        }
+        if eff.contains("k star") {
+            star_class_subtypes.push("K (Yellow-Orange) Star");
+            star_class_subtypes.push("K (Yellow-Orange giant) Star");
+        }
+        if eff.contains("m star") {
+            star_class_subtypes.push("M (Red dwarf) Star");
+            star_class_subtypes.push("M (Red giant) Star");
+            star_class_subtypes.push("M (Red super giant) Star");
+        }
+        if eff.contains("l dwarf") { star_class_subtypes.push("L (Brown dwarf) Star"); }
+        if eff.contains("t dwarf") { star_class_subtypes.push("T (Brown dwarf) Star"); }
+        if eff.contains("y dwarf") { star_class_subtypes.push("Y (Brown dwarf) Star"); }
+        if eff.contains("t tauri") { star_class_subtypes.push("T Tauri Star"); }
+        if eff.contains("herbig") { star_class_subtypes.push("Herbig Ae/Be Star"); }
+        if eff.contains("c star type") { star_class_subtypes.push("C Star"); }
+        if eff.contains("cj star type") { star_class_subtypes.push("CJ Star"); }
+        if eff.contains("cn star type") { star_class_subtypes.push("CN Star"); }
+        if eff.contains("ms star type") { star_class_subtypes.push("MS-type Star"); }
+        if eff.contains("s star type") { star_class_subtypes.push("S-type Star"); }
+
+        // -- Properties --
         if eff.contains("terraformable") { is_terraformable = true; }
         if eff.contains("bio") || eff.contains("biological") { require_bio = true; }
         if eff.contains("geo") || eff.contains("geological") { require_geo = true; }
-        
+        if eff.contains("landable") { require_landable = true; }
+
+        // -- Rings --
         if eff.contains("icy ring") { ring_type_filter = Some("Icy".to_string()); }
-        else if eff.contains("metallic ring") || eff.contains("metal ring") { ring_type_filter = Some("Metallic".to_string()); }
+        else if eff.contains("metallic ring") { ring_type_filter = Some("Metallic".to_string()); }
+        else if eff.contains("metal rich ring") { ring_type_filter = Some("Metal Rich".to_string()); }
         else if eff.contains("rocky ring") { ring_type_filter = Some("Rocky".to_string()); }
         else if eff.contains("rings") || eff.contains("ring") { ring_type_filter = Some("%".to_string()); }
 
         let mut results: Vec<serde_json::Value>;
 
-        if is_terraformable || require_bio || require_geo || ring_type_filter.is_some() || !target_subtypes.is_empty() || include_white_dwarfs {
+        let has_subtypes = !target_subtypes.is_empty();
+        let has_star_classes = !star_class_subtypes.is_empty();
+        let has_wd_specific = !white_dwarf_specific.is_empty();
+        let has_wr_specific = !wolf_rayet_specific.is_empty();
+        let has_any_filter = is_terraformable || require_bio || require_geo || require_landable
+            || ring_type_filter.is_some() || has_subtypes || include_white_dwarfs
+            || has_star_classes || has_wd_specific || has_wr_specific || include_wolf_rayet;
+
+        if has_any_filter {
             let mut sql = String::from("
                 SELECT s.id64, s.name as systemName, s.population, i.minX, i.minY, i.minZ,
                        b.bodyId, b.name as bodyName, b.subType, b.distanceToArrival
@@ -81,6 +196,9 @@ async fn do_cube_search(
             if require_geo {
                 sql.push_str(" AND b.signals LIKE '%Geological%'");
             }
+            if require_landable {
+                sql.push_str(" AND b.isLandable = 1");
+            }
             if let Some(ref rt) = ring_type_filter {
                 if rt == "%" {
                     sql.push_str(" AND b.rings IS NOT NULL AND b.rings != '[]'");
@@ -89,16 +207,34 @@ async fn do_cube_search(
                     sql.push_str(" AND b.rings LIKE ?");
                 }
             }
-            let has_subtypes = !target_subtypes.is_empty();
-            if has_subtypes || include_white_dwarfs {
+
+            // Build the combined subtype OR clause
+            let needs_subtype_clause = has_subtypes || include_white_dwarfs || has_star_classes
+                || has_wd_specific || has_wr_specific || include_wolf_rayet;
+            if needs_subtype_clause {
                 sql.push_str(" AND (");
                 let mut subtype_conds = Vec::new();
                 if has_subtypes {
                     let placeholders = target_subtypes.iter().map(|_| "?").collect::<Vec<_>>().join(",");
                     subtype_conds.push(format!("b.subType IN ({})", placeholders));
                 }
+                if has_star_classes {
+                    let placeholders = star_class_subtypes.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+                    subtype_conds.push(format!("b.subType IN ({})", placeholders));
+                }
+                if has_wd_specific {
+                    let placeholders = white_dwarf_specific.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+                    subtype_conds.push(format!("b.subType IN ({})", placeholders));
+                }
                 if include_white_dwarfs {
                     subtype_conds.push("b.subType LIKE 'White Dwarf%'".to_string());
+                }
+                if has_wr_specific {
+                    let placeholders = wolf_rayet_specific.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+                    subtype_conds.push(format!("b.subType IN ({})", placeholders));
+                }
+                if include_wolf_rayet {
+                    subtype_conds.push("b.subType LIKE 'Wolf-Rayet%'".to_string());
                 }
                 sql.push_str(&subtype_conds.join(" OR "));
                 sql.push_str(")");
@@ -112,6 +248,15 @@ async fn do_cube_search(
                 query_params.push(rp);
             }
             for st in &target_subtypes {
+                query_params.push(st);
+            }
+            for st in &star_class_subtypes {
+                query_params.push(st);
+            }
+            for st in &white_dwarf_specific {
+                query_params.push(st);
+            }
+            for st in &wolf_rayet_specific {
                 query_params.push(st);
             }
 
