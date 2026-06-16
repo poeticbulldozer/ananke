@@ -4343,6 +4343,7 @@ async fn main() {
         .route("/api/carrier-route", post(carrier_route_post))
         .route("/api/neutron-route", post(neutron_route_post))
         .route("/api/galtea-progression", get(get_carrier_progression))
+		.route("/api/distance", get(get_distance))
         // EDMC ingest endpoints
         .route("/api/edmc/journal", post(edmc_journal))
         .route("/api/edmc/batch", post(edmc_batch))
@@ -4352,7 +4353,6 @@ async fn main() {
         .route("/heatmap", get(heatmap_html_handler))
         .layer(cors)
         .with_state(app_state);
-		.route("/api/distance", get(get_distance))
 
     let listener = TcpListener::bind(format!("0.0.0.0:{}", PORT)).await.unwrap();
     info!("Server listening on port {}", PORT);
