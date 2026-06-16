@@ -274,6 +274,14 @@ struct RouteNode {
     z: f64,
 }
 
+#[derive(Deserialize)]
+struct DistanceQuery {
+    #[serde(rename = "systemA", alias = "system_a", alias = "from")]
+    system_a: String,
+    #[serde(rename = "systemB", alias = "system_b", alias = "to")]
+    system_b: String,
+}
+
 impl PartialEq for RouteNode {
     fn eq(&self, other: &Self) -> bool { self.id64 == other.id64 }
 }
@@ -1141,6 +1149,60 @@ async fn get_carrier_progression(
     cache.expires_at = current_time + 86400;
 
     Ok(Json(result))
+}
+
+async fn get_distance(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<DistanceQuery>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let _permit = state.query_semaphore.acquire().await
+        .map_err(|_| (StatusCode::SERVICE_UNAVAILABLE, "Server overloaded".into()))?;
+
+    let name_a = params.system_a;
+    let name_b = params.system_b;
+    let pool = state.db_pool.clone();
+
+    let result = tokio::task::spawn_blocking(move || -> Result<serde_json::Value, String> {
+        let conn = pool.get().map_err(|e| e.to_string())?;
+
+        let lookup = |name: &str| -> Result<(i64, String, f64, f64, f64), String> {
+            conn.query_row(
+                "SELECT s.id64, s.name, i.minX, i.minY, i.minZ
+                 FROM systems s JOIN systems_index i ON s.id64 = i.id
+                 WHERE s.name = ? COLLATE NOCASE LIMIT 1",
+                params![name],
+                |row| Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, f64>(2)?,
+                    row.get::<_, f64>(3)?,
+                    row.get::<_, f64>(4)?,
+                )),
+            )
+            .map_err(|_| format!("System not found: {}", name))
+        };
+
+        let (id_a, resolved_a, ax, ay, az) = lookup(&name_a)?;
+        let (id_b, resolved_b, bx, by, bz) = lookup(&name_b)?;
+
+        let dx = bx - ax;
+        let dy = by - ay;
+        let dz = bz - az;
+        let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+
+        Ok(serde_json::json!({
+            "systemA": { "id64": id_a, "name": resolved_a, "coords": { "x": ax, "y": ay, "z": az } },
+            "systemB": { "id64": id_b, "name": resolved_b, "coords": { "x": bx, "y": by, "z": bz } },
+            "distanceLy": (distance * 100.0).round() / 100.0
+        }))
+    })
+    .await
+    .unwrap();
+
+    match result {
+        Ok(json) => Ok(Json(json)),
+        Err(e) => Err((StatusCode::NOT_FOUND, e)),
+    }
 }
 
 // --- NEAREST STATION SEARCH ---
@@ -4290,6 +4352,7 @@ async fn main() {
         .route("/heatmap", get(heatmap_html_handler))
         .layer(cors)
         .with_state(app_state);
+		.route("/api/distance", get(get_distance))
 
     let listener = TcpListener::bind(format!("0.0.0.0:{}", PORT)).await.unwrap();
     info!("Server listening on port {}", PORT);
